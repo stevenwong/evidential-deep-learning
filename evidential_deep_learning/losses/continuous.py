@@ -67,3 +67,14 @@ def EvidentialRegression(y_true, evidential_output, coeff=1.0):
     loss_nll = NIG_NLL(y_true, gamma, v, alpha, beta)
     loss_reg = NIG_Reg(y_true, gamma, v, alpha, beta)
     return loss_nll + coeff * loss_reg
+
+def NG_NLL(y, u, lam, alpha, beta, reduce=True):
+    ab2 = 2. * alpha * beta
+
+    nll = 0.5 * tf.math.log(np.pi / (alpha * lam)) \
+        - alpha * tf.math.log(ab2) \
+        + (alpha + 0.5) * tf.math.log(alpha * lam * (y - u) ** 2 + ab2) \
+        + tf.math.lgamma(alpha) \
+        - tf.math.lgamma(alpha + 0.5)
+
+    return tf.reduce_mean(nll) if reduce else nll

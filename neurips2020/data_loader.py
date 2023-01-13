@@ -144,7 +144,7 @@ def _load_energy_efficiency():
     y2    Cooling Load
     """
     data_file = os.path.join(data_dir, 'energy-efficiency/ENB2012_data.xlsx')
-    data      = pd.read_excel(data_file)
+    data      = pd.read_excel(data_file, usecols=list(range(10)))
     X         = data.values[:, :-2]
     y_heating = data.values[:, -2]
     y_cooling = data.values[:, -1]
@@ -170,9 +170,10 @@ def _load_wine():
     Output variable (based on sensory data):
     12 - quality (score between 0 and 10)
     """
-    # data_file = os.path.join(data_dir, 'wine-quality/winequality-red.csv')
-    data_file = os.path.join(data_dir, 'wine-quality/wine_data_new.txt')
-    data     = pd.read_csv(data_file, sep=' ', header=None)
+    data_file = os.path.join(data_dir, 'wine-quality/winequality-red.csv')
+    data     = pd.read_csv(data_file, sep=';', header=None, skiprows=1)
+    # data_file = os.path.join(data_dir, 'wine-quality/wine_data_new.txt')
+    # data     = pd.read_csv(data_file, sep=' ', header=None)
     X = data.values[:, :-1]
     y = data.values[:,  -1]
     return X, y
@@ -308,7 +309,7 @@ def load_dataset(name, split_seed=0, test_fraction=.1, return_as_tensor=False):
                   "kin8nm"            : _load_kin8nm,
                   "naval"             : _load_naval,
                   "protein"           : _load_protein,
-                  "depth"              : _load_depth,
+                  "depth"             : _load_depth,
                   "song"              : _load_song}
 
     print("Loading dataset {}....".format(name))

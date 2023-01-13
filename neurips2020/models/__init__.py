@@ -2,14 +2,17 @@ from .toy import bbbp
 from .toy import dropout
 from .toy import ensemble
 from .toy import evidential
+from .toy import normalgamma
 from .toy import gaussian
 from .toy import deterministic
+from .toy import standalone
 from .toy.h_params import h_params
 
 from .depth import bbbp
 from .depth import dropout
 from .depth import ensemble
 from .depth import evidential
+from .depth import normalgamma
 from .depth import gaussian
 from .depth import deterministic
 
@@ -24,7 +27,7 @@ def get_correct_model(dataset, trainer):
 def load_depth_model(path, compile=False):
     import glob
     import tensorflow as tf
-    import edl
+    import evidential_deep_learning as edl
 
     model_paths = glob.glob(path)
     if model_paths == []:

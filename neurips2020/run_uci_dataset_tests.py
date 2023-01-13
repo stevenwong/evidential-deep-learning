@@ -4,8 +4,11 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import time
 from scipy import stats
+import pandas as pd
+import sys
+sys.path.insert(0, '../')
 
-import edl
+#import edl
 import data_loader
 import trainers
 import models
@@ -21,10 +24,24 @@ parser.add_argument('--datasets', nargs='+', default=["yacht"],
                     choices=['boston', 'concrete', 'energy-efficiency',
                             'kin8nm', 'naval', 'power-plant', 'protein',
                             'wine', 'yacht'])
+parser.add_argument('--trainer', nargs='+', default=['evidential'],
+                    choices=['evidential', 'ensemble', 'normal_gamma', 'standalone'])
 args = parser.parse_args()
 
+def parse_trainers(x):
+    if x == 'evidential':
+        return trainers.Evidential
+    elif x == 'ensemble':
+        return trainers.Ensemble
+    elif x == 'normal_gamma':
+        return trainers.NormalGamma
+    elif x == 'standalone':
+        return trainers.Standalone
+    else:
+        raise ValueError('Unknown trainer ' + x)
+
 """" ================================================"""
-training_schemes = [trainers.Evidential]
+training_schemes = [parse_trainers(x) for x in args.trainer]
 datasets = args.datasets
 num_trials = args.num_trials
 num_epochs = args.num_epochs
@@ -64,5 +81,10 @@ print("==========================")
 print("TRAINERS: {}\nDATASETS: {}".format([trainer.__name__ for trainer in training_schemes], datasets))
 print("MEAN: \n{}".format(mu))
 print("ERROR: \n{}".format(error))
+
+scores = pd.DataFrame(np.vstack([mu, error]),
+    index=pd.MultiIndex.from_product([['Mean', 'Error'], datasets], names=['Metric', 'Dataset']),
+    columns=pd.MultiIndex.from_product([['RMSE', 'NLL'], args.trainer], names=['Metric', 'Model']))
+scores.to_csv('scores.csv')
 
 import pdb; pdb.set_trace()

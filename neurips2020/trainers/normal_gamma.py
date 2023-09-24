@@ -12,7 +12,7 @@ from .util import normalize, gallery
 
 class NormalGamma:
     def __init__(self, models, opts, dataset="", learning_rate=1e-3, lam=0.0, epsilon=1e-2, maxi_rate=1e-4, tag=""):
-        self.nll_loss_function = edl.losses.NG_NLL
+        self.nll_loss_function = edl.losses.SMD_NLL2
         # self.reg_loss_function = edl.losses.NIG_Reg
 
         self.models = models
@@ -39,8 +39,8 @@ class NormalGamma:
         val_log_dir = os.path.join('logs', '{}_{}_{}_{}_val'.format(current_time, dataset, trainer, tag))
         self.val_summary_writer = tf.summary.create_file_writer(val_log_dir)
 
-    def loss_function(self, y, mu, v, alpha, beta, reduce=True, return_comps=False):
-        nll_loss = self.nll_loss_function(y, mu, v, alpha, beta, reduce=reduce)
+    def loss_function(self, y, mu, s2b, alpha, reduce=True, return_comps=False):
+        nll_loss = self.nll_loss_function(y, mu, s2b, alpha, reduce=reduce)
         # reg_loss = self.reg_loss_function(y, mu, v, alpha, beta, reduce=reduce)
         # loss = nll_loss + self.lam * (reg_loss - self.epsilon)
         loss = nll_loss
@@ -68,8 +68,8 @@ class NormalGamma:
 
             with tf.GradientTape() as tape:
                 outputs = model(x, training=True) #forward pass
-                mu, v, alpha, beta = tf.split(outputs, 4, axis=-1)
-                loss, (nll_loss, reg_loss) = self.loss_function(y, mu, v, alpha, beta, return_comps=True)
+                mu, s2b, alpha = tf.split(outputs, 3, axis=-1)
+                loss, (nll_loss, reg_loss) = self.loss_function(y, mu, s2b, alpha, return_comps=True)
                 y_hats.append(mu)
                 losses.append(loss)
 
@@ -91,9 +91,10 @@ class NormalGamma:
     @tf.function
     def evaluate(self, x, y):
         preds = tf.stack([model(x, training=False) for model in self.models], axis=0) #forward pass
-        mus, vs, alphas, betas = tf.split(preds, 4, axis=-1)
+        mus, s2bs, alphas = tf.split(preds, 3, axis=-1)
         mean_mu = tf.reduce_mean(mus, axis=0)
-        var = betas / (vs * (alphas - 1.))
+        # var = s2bs / (alphas - 1.)
+        var = s2bs * alphas / (alphas - 1.)
         var = tf.reduce_mean(var + tf.square(mus), axis=0) - tf.square(mean_mu)
         # loss = self.loss_function(y, mean_mu, tf.sqrt(var))
 

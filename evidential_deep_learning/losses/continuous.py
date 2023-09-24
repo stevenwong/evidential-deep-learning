@@ -68,13 +68,27 @@ def EvidentialRegression(y_true, evidential_output, coeff=1.0):
     loss_reg = NIG_Reg(y_true, gamma, v, alpha, beta)
     return loss_nll + coeff * loss_reg
 
-def NG_NLL(y, u, lam, alpha, beta, reduce=True):
-    ab2 = 2. * alpha * beta
-
-    nll = 0.5 * tf.math.log(np.pi / (alpha * lam)) \
-        - alpha * tf.math.log(ab2) \
-        + (alpha + 0.5) * tf.math.log(alpha * lam * (y - u) ** 2 + ab2) \
+def NG_NLL(y, u, alpha, beta, reduce=True):
+    nll = 0.5 * tf.math.log(2. * np.pi * beta) \
+        + (alpha + 0.5) * tf.math.log((1. + 1. / (2. * beta)) * (y - u) ** 2) \
         + tf.math.lgamma(alpha) \
         - tf.math.lgamma(alpha + 0.5)
 
     return tf.reduce_mean(nll) if reduce else nll
+
+def SMD_NLL(y, u, s2b, alpha, reduce=True):
+    nll = tf.math.lgamma(alpha) \
+		- tf.math.lgamma(alpha + 0.5) \
+		+ 0.5 * tf.math.log(2. * np.pi * s2b) \
+		+ (alpha + 0.5) * tf.math.log(((y - u) ** 2.) / (2. * s2b) + 1.)
+
+    return tf.reduce_mean(nll) if reduce else nll
+
+def SMD_NLL2(y, u, s2, alpha, reduce=True):
+    nll = tf.math.lgamma(alpha) \
+		- tf.math.lgamma(alpha + 0.5) \
+		+ 0.5 * tf.math.log(2. * np.pi * s2 * alpha) \
+		+ (alpha + 0.5) * tf.math.log(((y - u) ** 2.) / (2. * s2 * alpha) + 1.)
+
+    return tf.reduce_mean(nll) if reduce else nll
+

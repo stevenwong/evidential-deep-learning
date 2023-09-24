@@ -65,28 +65,22 @@ def create(
             x = tf.keras.layers.Dense(num_neurons, activation=activation)(x)
         latent = x
 
-        x = tf.keras.layers.Dense(int(num_neurons/4), activation=activation)(x)
+        x = tf.keras.layers.Dense(int(num_neurons/3), activation=activation)(x)
         mu = tf.keras.layers.Dense(1, activation='linear')(x)
-
-        # nu
-        x = latent
-        x = tf.keras.layers.Dense(int(num_neurons/4), activation=activation)(x)
-        x = tf.keras.layers.Dense(1, activation='linear')(x)
-        v = tf.nn.softplus(x)
 
         # alpha
         x = latent
-        x = tf.keras.layers.Dense(int(num_neurons/4), activation=activation)(x)
+        x = tf.keras.layers.Dense(int(num_neurons/3), activation=activation)(x)
         x = tf.keras.layers.Dense(1, activation='linear')(x)
         alpha = tf.nn.softplus(x) + 1.
 
-        # beta
+        # s2b
         x = latent
-        x = tf.keras.layers.Dense(int(num_neurons/4), activation=activation)(x)
+        x = tf.keras.layers.Dense(int(num_neurons/3), activation=activation)(x)
         x = tf.keras.layers.Dense(1, activation='linear')(x)
-        beta = tf.nn.softplus(x)
+        s2b = tf.nn.softplus(x)
 
-        model = tf.keras.Model(inputs=inputs, outputs=tf.concat([mu, v, alpha, beta], axis=-1))
+        model = tf.keras.Model(inputs=inputs, outputs=tf.concat([mu, s2b, alpha], axis=-1))
         return model
 
     models = [create_model() for _ in range(num_ensembles)]
